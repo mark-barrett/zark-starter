@@ -2,7 +2,9 @@ import json
 
 from django.http import HttpResponse, JsonResponse
 from django.views import View
-from pydantic import ValidationError
+from starter.schema import ZarkSchema
+
+from pydantic import ValidationError, BaseModel
 
 from starter.schema import User
 
@@ -13,6 +15,18 @@ class ZarkView(View):
 
     @classmethod
     def as_view(cls, **initkwargs):
+        # Checking that the class has a valid schema attribute
+        if not cls.schema:
+            raise TypeError(
+                "%s() must have a valid schema "
+                "in order to use this view. " % (cls.__name__)
+            )
+        else:
+            if ZarkSchema not in cls.schema.__mro__:
+                raise TypeError(
+                    "%s() schema must of type ZarkSchema " % (cls.__name__)
+                )
+
         # todo: validators to check there is a schema if needed. e.g. don't need a schema for the GET?
         for key in initkwargs:
             if key in cls.http_method_names:
@@ -34,7 +48,7 @@ class ZarkView(View):
             request_body = json.loads(request.body.decode('utf-8'))
             # todo: get all exceptions. Do proper exception handling. this is just a test
             try:
-                _ = self.schema(**request_body)
+                validated_data = self.schema(**request_body)
                 if not hasattr(self, "request"):
                     raise AttributeError(
                         "%s instance has no 'request' attribute. Did you override "
@@ -69,8 +83,9 @@ class ZarkView(View):
 
 
 class Test(ZarkView):
-
     schema = User
 
     def post(self, request, *args, **kwargs):
+        self.schema.data # <-- gives you the validated data
+        self.schema.model.save() # <--
         return HttpResponse('OK')
