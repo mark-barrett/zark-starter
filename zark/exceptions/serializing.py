@@ -1,0 +1,2 @@
+class SerializingException(Exception):
+    pass

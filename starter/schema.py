@@ -1,14 +1,12 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from zark.schemas.base import Schema, JSONSchema
 
 
-class ZarkSchema(BaseModel):
-    pass
+class User(JSONSchema):
 
-
-class User(ZarkSchema):
     first_name: str
     last_name: str
     email: str
     age: Optional[int]
+
